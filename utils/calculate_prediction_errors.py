@@ -9,11 +9,11 @@ input_data = {}
 output = {}
 
 
-with open('/home/chicobentojr/Workspace/UFRGS/inf-covid19/tools/server/input.json') as f:
-    input_data = json.load(f)
+def get_metric(obj, metric):
+    if metric == "deaths":
+        return obj.deaths
+    return obj.cases
 
-
-# print(json.dumps(input, indent=2))
 
 def reduce_to_train_data(data, metric):
     # return slice.reduce(
@@ -26,8 +26,9 @@ def reduce_to_train_data(data, metric):
     X, Y = [], []
 
     for i, d in enumerate(data):
+        value = get_metric(d, metric)
         X.append(i)
-        Y.append(d[metric])
+        Y.append(value)
 
     return X, Y
 
@@ -106,11 +107,11 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
 
         # const rawValue = dataSinceFirstCase[BASE_INDEX + index][metric]
         # const errorFromRaw = (predValue - rawValue) / predValue
-        raw_value = raw_data[base_index + i][metric]
+        raw_value = get_metric(raw_data[base_index + i], metric)
         error_from_raw = (pred_value - raw_value) / pred_value
 
         new_data.append({
-            'x': row['date'],
+            'x': row.date,
             'y': error_from_raw * 100,
             'is_prediction': True,
             'raw_value': raw_value,
@@ -125,17 +126,17 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
     # return regressors[minErrorIndex];
 # data = input['data'][-90:]
 # data = input['data']
-data = input_data
+# data = input_data
 
-# print("Data")
-# print(data)
-# print()
+# # print("Data")
+# # print(data)
+# # print()
 
 
-result_1d = get_serie_data(data, 1, metric="deaths")
+# result_1d = get_serie_data(data, 1, metric="deaths")
 
-print("Result 1d")
-print(json.dumps(result_1d))
+# print("Result 1d")
+# print(json.dumps(result_1d))
 
 # print("best model")
 # print(get_best_model(data, 30 + 1, 1, "deaths"))
