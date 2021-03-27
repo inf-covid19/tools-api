@@ -96,3 +96,86 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
         })
 
     return new_data[-base_index:]
+
+
+def get_predictions(data, metric, test_size=7):
+    print("preds to ", len(data))
+    _, test_Y = reduce_to_train_data(data[-test_size:], metric)
+
+    regressors = []
+
+    for i in range(len(data)):
+        # const { X, Y } = reduceFunction(dataSinceFirstCase.slice(-(2 * TEST_SIZE + index)).slice(0, TEST_SIZE + index));
+        X, Y = reduce_to_train_data(data[-(2 * test_size + i):], metric)
+        # print("X", X)
+        # print("Y", Y)
+        # print()
+        X = X[:test_size + i]
+        Y = Y[:test_size + i]
+
+        # print("X", X)
+        # print("Y", Y)
+
+        errors = []
+
+        try:
+            for v in [2]:
+                degree = v if len(X) > 2 else 1
+                regressor = np.poly1d(np.polyfit(X, Y, degree))
+
+                for idx, real_value in enumerate(test_Y):
+                    pred_value = math.floor(regressor(len(Y) + idx) + 0.5)
+
+                    errors.append(math.pow(real_value - pred_value, 2))
+
+            regressors.append({
+                'regressor': regressor,
+                'mse': np.mean(errors),
+                'X': X,
+                'Y': Y
+            })
+        except:
+            pass
+
+    mse_errors = list(map(lambda x: x['mse'], regressors))
+    min_error_index = np.argmin(mse_errors)
+
+    best_model = regressors[min_error_index]
+
+    # print('errors', mse_errors)
+
+    print("best model")
+    print(best_model)
+
+    def pred_fn(n):
+        return math.floor(best_model['regressor'](n) + 0.5)
+
+    # Calculate new preds
+    new_preds = []
+    best_X = best_model['X']
+
+    # const fActual = last(testSlice.Y)! as number;
+    # const fPrediction = pred(X.length + TEST_SIZE - 1);
+    # const predDiff = fActual - fPrediction;
+    f_actual = test_Y[-1]
+    f_prediction = pred_fn(len(best_X) + test_size - 1)
+    pred_diff = f_actual - f_prediction
+
+    last_metric = get_metric(data[-1], metric)
+
+    print(f_actual, f_prediction, pred_diff, last_metric)
+
+    for i in range(7):
+        # const predValue = pred(X.length + TEST_SIZE + index) + predDiff
+        # const lastMetric = (arr[index - 1] | | last(dataSinceFirstCase))[metric] as number
+        pred_value = pred_fn(len(best_X) + test_size + i) + pred_diff
+
+        if pred_value > last_metric:
+            last_metric = pred_value
+
+        new_preds.append({
+            'date': f"new-date-{i}",
+            f"{metric}": max(pred_value, last_metric)
+        })
+
+    return new_preds
