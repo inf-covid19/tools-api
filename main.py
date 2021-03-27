@@ -18,11 +18,18 @@ class DateRecord(BaseModel):
 @app.post("/predictions/{metric}")
 def read_item(records: List[DateRecord], metric: str = "cases"):
 
-    # print("recoreds")
-    # print(records)
+    predictions = calculate_prediction_errors.get_predictions(records, metric)
+
+    return {
+        'preds': predictions
+    }
+
+
+@app.post("/predictions-error/{threshold}/{metric}")
+def read_item(records: List[DateRecord], threshold: int, metric: str = "cases"):
 
     serie_1d = calculate_prediction_errors.get_serie_data(
-        records, 1, metric=metric)
+        records, threshold, metric=metric)
 
     return {
         'serie_1d': serie_1d
