@@ -1,3 +1,4 @@
+from re import T
 from numpy.core.numeric import identity
 from numpy.lib.index_tricks import _fill_diagonal_dispatcher
 import pandas as pd
@@ -31,9 +32,17 @@ def get_best_model(data, index, threshold, metric):
 
     regressors = []
 
+    # print("data", len(data))
+    # print("Test Y", len(test_Y), test_Y)
+    # print("index", index)
+    # print("threshold", threshold)
+
     for i in range(index):
-        X, Y = reduce_to_train_data(data[i:index - threshold], metric)
         errors = []
+        X, Y = reduce_to_train_data(data[i:index - threshold], metric)
+        # print("i", i)
+        # print("X", X)
+        # print("Y", Y)
 
         try:
             for v in [2]:
@@ -55,6 +64,9 @@ def get_best_model(data, index, threshold, metric):
         except:
             pass
 
+    if not regressors:
+        return None
+
     mse_errors = list(map(lambda x: x['mse'], regressors))
     min_error_index = np.argmin(mse_errors)
 
@@ -68,10 +80,13 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
     data = raw_data[base_index:]
 
     for i, row in enumerate(data):
-        # print(
-        #     f"Trying search serie data with {i}/{len(data)} and threshold = {threshold}")
+        print(
+            f"Trying search serie data with {i}/{len(data)} and threshold = {threshold}")
         best_model = get_best_model(
             raw_data, base_index + i, threshold, metric)
+
+        if not best_model:
+            continue
 
         def pred_fn(n):
             return math.floor(best_model['regressor'](n) + 0.5)
@@ -98,7 +113,7 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
     return new_data[-base_index:]
 
 
-def get_predictions(data, metric, test_size=7):
+def get_predictions(data, metric, next_days, test_size=7):
     print("preds to ", len(data))
     _, test_Y = reduce_to_train_data(data[-test_size:], metric)
 
@@ -165,7 +180,7 @@ def get_predictions(data, metric, test_size=7):
 
     print(f_actual, f_prediction, pred_diff, last_metric)
 
-    for i in range(7):
+    for i in range(next_days):
         # const predValue = pred(X.length + TEST_SIZE + index) + predDiff
         # const lastMetric = (arr[index - 1] | | last(dataSinceFirstCase))[metric] as number
         pred_value = pred_fn(len(best_X) + test_size + i) + pred_diff
