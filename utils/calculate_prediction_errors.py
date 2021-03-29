@@ -1,9 +1,4 @@
-from re import T
-from numpy.core.numeric import identity
-from numpy.lib.index_tricks import _fill_diagonal_dispatcher
-import pandas as pd
 import numpy as np
-import json
 import math
 
 input_data = {}
@@ -32,17 +27,9 @@ def get_best_model(data, index, threshold, metric):
 
     regressors = []
 
-    # print("data", len(data))
-    # print("Test Y", len(test_Y), test_Y)
-    # print("index", index)
-    # print("threshold", threshold)
-
     for i in range(index):
         errors = []
         X, Y = reduce_to_train_data(data[i:index - threshold], metric)
-        # print("i", i)
-        # print("X", X)
-        # print("Y", Y)
 
         try:
             for v in [2]:
@@ -74,17 +61,12 @@ def get_best_model(data, index, threshold, metric):
 
 
 def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
-    print("Getting serie data")
-    print("raw data", len(raw_data))
-    print("threshold", threshold)
 
     new_data = []
 
     data = raw_data[base_index:]
 
     for i, row in enumerate(data):
-        print(
-            f"Trying search serie data with {i}/{len(data)} and threshold = {threshold}")
         best_model = get_best_model(
             raw_data, base_index + i, threshold, metric)
 
@@ -121,22 +103,14 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
 
 
 def get_predictions(data, metric, next_days, test_size=7):
-    print("preds to ", len(data))
     _, test_Y = reduce_to_train_data(data[-test_size:], metric)
 
     regressors = []
 
     for i in range(len(data)):
-        # const { X, Y } = reduceFunction(dataSinceFirstCase.slice(-(2 * TEST_SIZE + index)).slice(0, TEST_SIZE + index));
         X, Y = reduce_to_train_data(data[-(2 * test_size + i):], metric)
-        # print("X", X)
-        # print("Y", Y)
-        # print()
         X = X[:test_size + i]
         Y = Y[:test_size + i]
-
-        # print("X", X)
-        # print("Y", Y)
 
         errors = []
 
@@ -164,11 +138,6 @@ def get_predictions(data, metric, next_days, test_size=7):
 
     best_model = regressors[min_error_index]
 
-    # print('errors', mse_errors)
-
-    print("best model")
-    print(best_model)
-
     def pred_fn(n):
         return math.floor(best_model['regressor'](n) + 0.5)
 
@@ -176,20 +145,13 @@ def get_predictions(data, metric, next_days, test_size=7):
     new_preds = []
     best_X = best_model['X']
 
-    # const fActual = last(testSlice.Y)! as number;
-    # const fPrediction = pred(X.length + TEST_SIZE - 1);
-    # const predDiff = fActual - fPrediction;
     f_actual = test_Y[-1]
     f_prediction = pred_fn(len(best_X) + test_size - 1)
     pred_diff = f_actual - f_prediction
 
     last_metric = get_metric(data[-1], metric)
 
-    print(f_actual, f_prediction, pred_diff, last_metric)
-
     for i in range(next_days):
-        # const predValue = pred(X.length + TEST_SIZE + index) + predDiff
-        # const lastMetric = (arr[index - 1] | | last(dataSinceFirstCase))[metric] as number
         pred_value = pred_fn(len(best_X) + test_size + i) + pred_diff
 
         if pred_value > last_metric:
