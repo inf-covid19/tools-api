@@ -1,5 +1,3 @@
-import time
-import concurrent.futures
 from typing import List
 from pydantic import BaseModel
 from fastapi import FastAPI
