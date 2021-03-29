@@ -4,6 +4,7 @@ from typing import List
 from pydantic import BaseModel
 from fastapi import FastAPI
 from utils import calculate_prediction_errors
+from multiprocessing import Pool, cpu_count
 
 app = FastAPI()
 
@@ -45,9 +46,7 @@ def read_item(req: PredictionsErrorInput, metric: str = "cases"):
 
     start = time.ctime()
 
-    records = req.records[-100:]
-    # print(len(records))
-    # return {}
+    records = req.records
     thresholds = req.thresholds
 
     result_series = []
@@ -74,29 +73,33 @@ def read_item(req: PredictionsErrorInput, metric: str = "cases"):
 
     start = time.ctime()
 
-    records = req.records[-200:]
+    records = req.records
     thresholds = req.thresholds
 
     result_series = []
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(calculate_prediction_errors.get_serie_data, records, t, metric=metric)
-                   for t in thresholds]
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    with Pool() as pool:
+        # futures = [executor.submit(calculate_prediction_errors.get_serie_data, records, t, metric=metric)
+        #            for t in thresholds]
 
-        print("threads")
-        print(futures)
-        # serie = future.result()
-        for i, f in enumerate(futures):
-            serie = f.result()
+        values = ((records, t, 30, metric) for t in thresholds)
+
+        # print("values", values)
+        # print("next", next(values))
+
+        res = pool.starmap(calculate_prediction_errors.get_serie_data, values)
+        print(res)
+
+        # print("threads")
+        # print(futures)
+        for i, f in enumerate(res):
+            # serie = f.result()
+            serie = f
             result_series.append({
                 'threshold': thresholds[i],
                 'serie': serie
             })
-        # print(return_value)
-
-    # for threshold in thresholds:
-    #     serie = calculate_prediction_errors.get_serie_data(
-    #         records, threshold, metric=metric)
 
     print(f"Request started at {start}")
     print(f"Request finished at {time.ctime()}")

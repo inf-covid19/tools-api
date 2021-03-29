@@ -74,6 +74,9 @@ def get_best_model(data, index, threshold, metric):
 
 
 def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
+    print("Getting serie data")
+    print("raw data", len(raw_data))
+    print("threshold", threshold)
 
     new_data = []
 
@@ -99,7 +102,11 @@ def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
         pred_value = pred_fn(pred_index) + pred_diff
 
         raw_value = get_metric(raw_data[base_index + i], metric)
-        error_from_raw = (pred_value - raw_value) / pred_value
+
+        if pred_value != 0:
+            error_from_raw = (pred_value - raw_value) / pred_value
+        else:
+            error_from_raw = 0
 
         new_data.append({
             'x': row.date,
