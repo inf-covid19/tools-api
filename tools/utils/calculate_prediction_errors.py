@@ -62,7 +62,7 @@ def get_best_model(data, index, threshold, metric):
     return regressors[min_error_index]
 
 
-def get_serie_data(raw_data, threshold, base_index=30, metric="cases"):
+def get_series_data(raw_data, threshold, base_index=30, metric="cases"):
 
     new_data = []
 
