@@ -25,6 +25,7 @@ class PredictionsInput(BaseModel):
 class PredictionsErrorInput(BaseModel):
     records: List[DailyRecord]
     thresholds: List[int]
+    base_index: int = 30
 
 
 @app.post("/predictions/{metric}")
@@ -37,72 +38,31 @@ def read_item(req: PredictionsInput, metric: str = "cases"):
         records, metric, days)
 
     return {
-        'preds': predictions
+        'predictions': predictions
     }
 
 
 @app.post("/predictions-error/{metric}")
 def read_item(req: PredictionsErrorInput, metric: str = "cases"):
 
-    start = time.ctime()
-
     records = req.records
     thresholds = req.thresholds
+    base_index = req.base_index
 
     result_series = []
 
-    for threshold in thresholds:
-        serie = calculate_prediction_errors.get_serie_data(
-            records, threshold, metric=metric)
-
-        result_series.append({
-            'threshold': threshold,
-            'serie': serie
-        })
-
-    print(f"Request started at {start}")
-    print(f"Request finished at {time.ctime()}")
-
-    return {
-        'series': result_series
-    }
-
-
-@app.post("/predictions-error-thread/{metric}")
-def read_item(req: PredictionsErrorInput, metric: str = "cases"):
-
-    start = time.ctime()
-
-    records = req.records
-    thresholds = req.thresholds
-
-    result_series = []
-
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
     with Pool() as pool:
-        # futures = [executor.submit(calculate_prediction_errors.get_serie_data, records, t, metric=metric)
-        #            for t in thresholds]
 
-        values = ((records, t, 30, metric) for t in thresholds)
+        values = ((records, t, base_index, metric) for t in thresholds)
 
-        # print("values", values)
-        # print("next", next(values))
+        series = pool.starmap(
+            calculate_prediction_errors.get_serie_data, values)
 
-        res = pool.starmap(calculate_prediction_errors.get_serie_data, values)
-        print(res)
-
-        # print("threads")
-        # print(futures)
-        for i, f in enumerate(res):
-            # serie = f.result()
-            serie = f
+        for i, serie in enumerate(series):
             result_series.append({
                 'threshold': thresholds[i],
                 'serie': serie
             })
-
-    print(f"Request started at {start}")
-    print(f"Request finished at {time.ctime()}")
 
     return {
         'series': result_series
