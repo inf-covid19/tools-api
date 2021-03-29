@@ -59,7 +59,7 @@ def health():
     return {"is_healthy": True}
 
 
-@app.post("/v1/api/predictions/{metric}", tags=["predictions"], response_model=PredictionsOutput)
+@app.post("/api/v1/predictions/{metric}", tags=["predictions"], response_model=PredictionsOutput)
 def fetch_predictions(req: PredictionsInput, metric: str):
 
     records = req.records
@@ -72,7 +72,7 @@ def fetch_predictions(req: PredictionsInput, metric: str):
     }
 
 
-@app.post("/v1/api/predictions/{metric}/errors", tags=["predictions"], response_model=PredictionsErrorOutput)
+@app.post("/api/v1/predictions/{metric}/errors", tags=["predictions"], response_model=PredictionsErrorOutput)
 def fetch_predictions_errors(req: PredictionsErrorInput, metric: str):
 
     records = req.records
