@@ -9,7 +9,7 @@ verify_ssl = true
 pandas = "*"
 numpy = "*"
 fastapi = "*"
-uvicorn = {extras = ["standard"],version = "*"}
+uvicorn = {extras = ["standard"], version = "*"}
 
 [requires]
 python_version = "3.7"
