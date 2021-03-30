@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
-from fastapi import FastAPI
 from multiprocessing import Pool
 
-from tools.utils.calculate_prediction_errors import get_predictions, get_series_data
+from pydantic import BaseModel
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from tools.core.prediction import get_predictions, get_series_data
 
 
 app = FastAPI()
@@ -20,7 +21,7 @@ app.add_middleware(
 
 
 class DailyRecord(BaseModel):
-    date: str
+    date: datetime
     cases: int
     cases_daily: int
     deaths: int
@@ -36,7 +37,7 @@ class DailyPrediction(BaseModel):
     date: datetime
     cases: Optional[int]
     deaths: Optional[int]
-    isPrediction: bool = True
+    is_prediction: bool = True
 
 
 class PredictionsOutput(BaseModel):
@@ -52,10 +53,10 @@ class PredictionsErrorInput(BaseModel):
 class ErrorSeriesItem(BaseModel):
     x: datetime
     y: float
-    isPrediction: bool
-    rawValue: int
-    predValue: int
-    rawError: int
+    is_prediction: bool
+    raw_value: int
+    pred_value: int
+    raw_error: int
 
 
 class ErrorSeries(BaseModel):
@@ -73,10 +74,10 @@ def health():
 
 
 @app.post("/api/v1/predictions/{metric}", tags=["predictions"], response_model=PredictionsOutput)
-def fetch_predictions(req: PredictionsInput, metric: str):
+def fetch_predictions(input: PredictionsInput, metric: str):
 
-    records = req.records
-    days = req.days
+    records = input.records
+    days = input.days
 
     predictions = get_predictions(records, metric, days)
 
@@ -86,11 +87,11 @@ def fetch_predictions(req: PredictionsInput, metric: str):
 
 
 @app.post("/api/v1/predictions/{metric}/errors", tags=["predictions"], response_model=PredictionsErrorOutput)
-def fetch_predictions_errors(req: PredictionsErrorInput, metric: str):
+def fetch_predictions_errors(input: PredictionsErrorInput, metric: str):
 
-    records = req.records
-    thresholds = req.thresholds
-    base_index = req.base_index
+    records = input.records
+    thresholds = input.thresholds
+    base_index = input.base_index
 
     result_series = []
 
