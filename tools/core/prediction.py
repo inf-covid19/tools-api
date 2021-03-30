@@ -95,10 +95,10 @@ def get_series_data(raw_data, threshold, base_index=30, metric="cases"):
         new_data.append({
             'x': row.date,
             'y': error_from_raw * 100,
-            'isPrediction': True,
-            'rawValue': raw_value,
-            'predValue': pred_value,
-            'rawError': pred_value - raw_value,
+            'is_prediction': True,
+            'raw_value': raw_value,
+            'pred_value': pred_value,
+            'raw_error': pred_value - raw_value,
         })
 
     return new_data[-base_index:]
