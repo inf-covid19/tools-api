@@ -5,8 +5,18 @@ from fastapi import FastAPI
 from multiprocessing import Pool
 
 from tools.utils.calculate_prediction_errors import get_predictions, get_series_data
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class DailyRecord(BaseModel):
@@ -26,9 +36,12 @@ class DailyPrediction(BaseModel):
     date: datetime
     cases: Optional[int]
     deaths: Optional[int]
+    isPrediction: bool = True
+
 
 class PredictionsOutput(BaseModel):
     predictions: List[DailyPrediction]
+
 
 class PredictionsErrorInput(BaseModel):
     records: List[DailyRecord]
@@ -39,10 +52,10 @@ class PredictionsErrorInput(BaseModel):
 class ErrorSeriesItem(BaseModel):
     x: datetime
     y: float
-    is_prediction: bool
-    raw_value: int
-    pred_value: int
-    raw_error: int
+    isPrediction: bool
+    rawValue: int
+    predValue: int
+    rawError: int
 
 
 class ErrorSeries(BaseModel):
