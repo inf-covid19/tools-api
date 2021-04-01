@@ -4,19 +4,25 @@ from multiprocessing import Pool
 
 from pydantic import BaseModel
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 from tools.core.prediction import get_predictions, get_series_data
 
+middleware = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+]
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="COVID-19 Analysis Tools API",
+    description="API for https://covid19.ufrgs.dev/tools",
+    middleware=middleware,
 )
 
 
@@ -73,7 +79,11 @@ def health():
     return {"is_healthy": True}
 
 
-@app.post("/api/v1/predictions/{metric}", tags=["predictions"], response_model=PredictionsOutput)
+@app.post(
+    "/api/v1/predictions/{metric}",
+    tags=["predictions"],
+    response_model=PredictionsOutput,
+)
 def fetch_predictions(input: PredictionsInput, metric: str):
 
     records = input.records
@@ -81,12 +91,14 @@ def fetch_predictions(input: PredictionsInput, metric: str):
 
     predictions = get_predictions(records, metric, days)
 
-    return {
-        'predictions': predictions
-    }
+    return {"predictions": predictions}
 
 
-@app.post("/api/v1/predictions/{metric}/errors", tags=["predictions"], response_model=PredictionsErrorOutput)
+@app.post(
+    "/api/v1/predictions/{metric}/errors",
+    tags=["predictions"],
+    response_model=PredictionsErrorOutput,
+)
 def fetch_predictions_errors(input: PredictionsErrorInput, metric: str):
 
     records = input.records
@@ -102,11 +114,6 @@ def fetch_predictions_errors(input: PredictionsErrorInput, metric: str):
         series = pool.starmap(get_series_data, values)
 
         for i, data in enumerate(series):
-            result_series.append({
-                'threshold': thresholds[i],
-                'data': data
-            })
+            result_series.append({"threshold": thresholds[i], "data": data})
 
-    return {
-        'series': result_series
-    }
+    return {"series": result_series}
