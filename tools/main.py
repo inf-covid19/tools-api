@@ -4,25 +4,21 @@ from multiprocessing import Pool
 
 from pydantic import BaseModel
 from fastapi import FastAPI
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 from tools.core.prediction import get_predictions, get_series_data
-
-middleware = [
-    Middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-]
 
 app = FastAPI(
     title="COVID-19 Analysis Tools API",
     description="API for https://covid19.ufrgs.dev/tools",
-    middleware=middleware,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex='https?://.*',
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
