@@ -64,7 +64,6 @@ class PredictionsErrorOutput(BaseModel):
     response_model=PredictionsOutput,
 )
 def fetch_predictions(input: PredictionsInput, metric: str):
-
     records = input.records
     days = input.days
 
@@ -79,7 +78,6 @@ def fetch_predictions(input: PredictionsInput, metric: str):
     response_model=PredictionsErrorOutput,
 )
 def fetch_predictions_errors(input: PredictionsErrorInput, metric: str):
-
     records = input.records
     thresholds = input.thresholds
     base_index = input.base_index

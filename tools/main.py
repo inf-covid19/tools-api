@@ -8,6 +8,12 @@ app = FastAPI(
     description="API for https://covid19.ufrgs.dev/tools",
 )
 
+
+@app.get("/_ah/health", tags=["system"])
+def health():
+    return {"is_healthy": True}
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex="https?://.*",
@@ -20,8 +26,3 @@ app.include_router(
     api.router,
     prefix="/api/v1",
 )
-
-
-@app.get("/_ah/health", tags=["system"])
-def health():
-    return {"is_healthy": True}

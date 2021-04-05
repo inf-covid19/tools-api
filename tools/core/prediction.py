@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from datetime import timedelta
-import dateutil.parser
 
 input_data = {}
 output = {}
@@ -153,7 +152,7 @@ def get_predictions(data, metric, next_days, test_size=7):
 
     last_metric = get_metric(data[-1], metric)
 
-    last_date = dateutil.parser.parse(data[-1].date)
+    last_date = data[-1].date
 
     for i in range(next_days):
         pred_value = pred_fn(len(best_X) + test_size + i) + pred_diff
